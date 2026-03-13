@@ -16,9 +16,7 @@
     "socket.io": "^4.7.0",
     "socket.io-client": "^4.7.0",
     "sqlite3": "^5.1.6",
-    "uuid": "^9.0.0",
-    "next-auth": "^4.24.5",
-    "@stripe/stripe-js": "^2.4.0"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
