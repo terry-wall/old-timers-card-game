@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import { GameBoard } from '../../../components/GameBoard'
 import { RoomLobby } from '../../../components/RoomLobby'
@@ -8,7 +8,7 @@ import { initSocket } from '../../../lib/socket'
 import { GameState, Player } from '../../../types/game'
 import { Socket } from 'socket.io-client'
 
-export default function Room() {
+function RoomContent() {
   const params = useParams()
   const searchParams = useSearchParams()
   const roomId = params.roomId as string
@@ -117,5 +117,17 @@ export default function Room() {
       currentPlayer={currentPlayer}
       onPlayCard={playCard}
     />
+  )
+}
+
+export default function Room() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white text-2xl">Loading room...</div>
+      </div>
+    }>
+      <RoomContent />
+    </Suspense>
   )
 }
