@@ -20,42 +20,72 @@ function RoomContent() {
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null)
   const [gameStarted, setGameStarted] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [connecting, setConnecting] = useState(true)
 
   useEffect(() => {
-    const socketInstance = initSocket()
-    setSocket(socketInstance)
+    let socketInstance: Socket | null = null
+    
+    const connectSocket = async () => {
+      try {
+        // Initialize socket server first
+        await fetch('/api/socket')
+        
+        socketInstance = initSocket()
+        setSocket(socketInstance)
 
-    socketInstance.emit('join-room', { roomId, playerName })
+        socketInstance.emit('join-room', { roomId, playerName })
 
-    socketInstance.on('room-joined', (data: { player: Player, players: Player[] }) => {
-      setCurrentPlayer(data.player)
-      setPlayers(data.players)
-      setError(null)
-    })
+        socketInstance.on('connect', () => {
+          console.log('Connected to socket server')
+          setConnecting(false)
+        })
 
-    socketInstance.on('player-joined', (players: Player[]) => {
-      setPlayers(players)
-    })
+        socketInstance.on('room-joined', (data: { player: Player, players: Player[] }) => {
+          setCurrentPlayer(data.player)
+          setPlayers(data.players)
+          setError(null)
+          setConnecting(false)
+        })
 
-    socketInstance.on('player-left', (players: Player[]) => {
-      setPlayers(players)
-    })
+        socketInstance.on('player-joined', (players: Player[]) => {
+          setPlayers(players)
+        })
 
-    socketInstance.on('game-started', (initialGameState: GameState) => {
-      setGameState(initialGameState)
-      setGameStarted(true)
-    })
+        socketInstance.on('player-left', (players: Player[]) => {
+          setPlayers(players)
+        })
 
-    socketInstance.on('game-updated', (newGameState: GameState) => {
-      setGameState(newGameState)
-    })
+        socketInstance.on('game-started', (initialGameState: GameState) => {
+          setGameState(initialGameState)
+          setGameStarted(true)
+        })
 
-    socketInstance.on('error', (errorMessage: string) => {
-      setError(errorMessage)
-    })
+        socketInstance.on('game-updated', (newGameState: GameState) => {
+          setGameState(newGameState)
+        })
+
+        socketInstance.on('error', (errorMessage: string) => {
+          setError(errorMessage)
+          setConnecting(false)
+        })
+
+        socketInstance.on('disconnect', () => {
+          console.log('Disconnected from socket server')
+          setConnecting(true)
+        })
+      } catch (error) {
+        console.error('Failed to connect to socket server:', error)
+        setError('Failed to connect to game server')
+        setConnecting(false)
+      }
+    }
+
+    connectSocket()
 
     return () => {
-      socketInstance.disconnect()
+      if (socketInstance) {
+        socketInstance.disconnect()
+      }
     }
   }, [roomId, playerName])
 
@@ -73,6 +103,14 @@ function RoomContent() {
         cardIndex
       })
     }
+  }
+
+  if (connecting) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-white text-2xl">Connecting to game server...</div>
+      </div>
+    )
   }
 
   if (error) {
