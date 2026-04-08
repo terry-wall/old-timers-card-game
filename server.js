@@ -5,12 +5,9 @@ const { Server } = require('socket.io')
 const { v4: uuidv4 } = require('uuid')
 const { 
   createRoom, 
-  roomExists, 
   addPlayerToRoom, 
-  removePlayerFromRoom, 
-  getRoomPlayers,
-  updateGameState,
-  getGameState 
+  removePlayerFromRoom,
+  updateGameState
 } = require('./src/lib/database')
 const { initializeGameState, processCardPlay, getValidCards } = require('./src/lib/game-logic')
 
